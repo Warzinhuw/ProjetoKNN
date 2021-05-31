@@ -10,7 +10,13 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
+
+
+
 public class App {
+    
+   
+    private static SortedMap<String,Float> mapaMedia = new TreeMap<>();
     
   public static void main(String[] args) {
 
@@ -78,10 +84,8 @@ public class App {
             break;
     }
 
-  
-    
 
-    System.out.println("\nDigite quantos vizinhos deseja analisar: ");
+    System.out.print("\nDigite quantos vizinhos deseja analisar: ");
     classify(dataset, Integer.parseInt(leitura.nextLine()), target);
     
     
@@ -94,6 +98,7 @@ public class App {
 
   }
 
+  
   private static SortedMap<Float,String[]> euclidianDistance(String[] target, LinkedList<String[]> dataset){
       float distancia = -1; 
       float calculo = 0;
@@ -104,10 +109,16 @@ public class App {
         + (Math.pow((Float.parseFloat(target[1]) - Float.parseFloat(dataset.get(i)[1])),2))
         + (Math.pow((Float.parseFloat(target[2]) - Float.parseFloat(dataset.get(i)[2])),2)));
 
-        System.out.println("calculo: "+ calculo);
         if( calculo < distancia || distancia == -1){
             distancia = calculo;
         }
+
+        if(mapaMedia.get(dataset.get(i)[3]) == null){
+            mapaMedia.put(dataset.get(i)[3],calculo);
+        }else{
+            mapaMedia.put(dataset.get(i)[3],mapaMedia.get(dataset.get(i)[3]) + calculo);
+        }
+
         mapa.put(calculo, dataset.get(i));
       }
       return mapa;
@@ -122,6 +133,7 @@ public class App {
     }
     SortedMap<String,Integer> mapaClasse = new TreeMap<>();
     int count = 0;
+    System.out.println("\n");
     for(Map.Entry<Float,String[]> entry : euclidianDistance(target, dataset).entrySet()){
         System.out.println(entry.getKey() + " " + entry.getValue()[3]);
 
@@ -134,16 +146,36 @@ public class App {
             break;   
         }
 
-        String classe = "";
-        int maiorQtd = 0;
+        String classe= "";
+        int maiorQtd = -1;
 
+        // Salva a quantidade de aparições de classe que mais aparece e o nome dela
         for(Map.Entry<String,Integer> entry: mapaClasse.entrySet()){
             if(entry.getValue() > maiorQtd){
                 maiorQtd = entry.getValue();
                 classe = entry.getKey();
             }
         }
-        System.out.println("\n\nClasse que mais aparece: " + classe);
+
+        /* Criterio de desempate caso apareça diferentes profissões com a mesma quantidade de aparições, utiliza
+        a menor soma total das classes que se repetem */
+        int repeticao = 0;
+        String classeMedia = mapaMedia.firstKey();
+        float menorMedia = mapaMedia.get(mapaMedia.firstKey());
+        for(Map.Entry<String,Float> entry: mapaMedia.entrySet()){
+            for(Map.Entry<String,Integer> mClasse: mapaClasse.entrySet()){
+                if(mClasse.getKey().equals(entry.getKey()) && mClasse.getValue() == maiorQtd){
+                    repeticao++;
+                    if(entry.getValue() < menorMedia){
+                        menorMedia = entry.getValue();
+                        classeMedia = entry.getKey();
+                    }
+                }
+            }
+        }
+        
+        System.out.println("\n\nClasse " + (repeticao > 1 ? "mais proxima: " + classeMedia : "que mais aparece: " + classe));
         System.out.println(mapaClasse);
+        System.out.println(mapaMedia);
     }
 }
